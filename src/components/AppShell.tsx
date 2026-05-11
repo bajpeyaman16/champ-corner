@@ -72,12 +72,12 @@ export function AppHeader({ title, greeting, showSearch = true }: { title?: stri
   );
 }
 
-const tabs = [
+const tabs: { to: string; label: string; icon: typeof Home; exact?: boolean }[] = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/explore", label: "Explore", icon: Compass },
   { to: "/my-events", label: "My Events", icon: Calendar },
   { to: "/profile", label: "Profile", icon: User },
-] as const;
+];
 
 export function BottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
