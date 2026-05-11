@@ -9,38 +9,283 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SportsRouteImport } from './routes/sports'
+import { Route as SavedRouteImport } from './routes/saved'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OrganizeRouteImport } from './routes/organize'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MyEventsRouteImport } from './routes/my-events'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as InviteRouteImport } from './routes/invite'
+import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SportsOutdoorRouteImport } from './routes/sports.outdoor'
+import { Route as SportsIndoorRouteImport } from './routes/sports.indoor'
+import { Route as SportsSportRouteImport } from './routes/sports.$sport'
+import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as EventsEventIdRegisterRouteImport } from './routes/events.$eventId.register'
 
+const SportsRoute = SportsRouteImport.update({
+  id: '/sports',
+  path: '/sports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizeRoute = OrganizeRouteImport.update({
+  id: '/organize',
+  path: '/organize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MyEventsRoute = MyEventsRouteImport.update({
+  id: '/my-events',
+  path: '/my-events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InviteRoute = InviteRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SportsOutdoorRoute = SportsOutdoorRouteImport.update({
+  id: '/outdoor',
+  path: '/outdoor',
+  getParentRoute: () => SportsRoute,
+} as any)
+const SportsIndoorRoute = SportsIndoorRouteImport.update({
+  id: '/indoor',
+  path: '/indoor',
+  getParentRoute: () => SportsRoute,
+} as any)
+const SportsSportRoute = SportsSportRouteImport.update({
+  id: '/$sport',
+  path: '/$sport',
+  getParentRoute: () => SportsRoute,
+} as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdRegisterRoute = EventsEventIdRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => EventsEventIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
+  '/invite': typeof InviteRoute
+  '/login': typeof LoginRoute
+  '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
+  '/organize': typeof OrganizeRoute
+  '/profile': typeof ProfileRoute
+  '/saved': typeof SavedRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/sports/$sport': typeof SportsSportRoute
+  '/sports/indoor': typeof SportsIndoorRoute
+  '/sports/outdoor': typeof SportsOutdoorRoute
+  '/events/$eventId/register': typeof EventsEventIdRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
+  '/invite': typeof InviteRoute
+  '/login': typeof LoginRoute
+  '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
+  '/organize': typeof OrganizeRoute
+  '/profile': typeof ProfileRoute
+  '/saved': typeof SavedRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/sports/$sport': typeof SportsSportRoute
+  '/sports/indoor': typeof SportsIndoorRoute
+  '/sports/outdoor': typeof SportsOutdoorRoute
+  '/events/$eventId/register': typeof EventsEventIdRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRoute
+  '/invite': typeof InviteRoute
+  '/login': typeof LoginRoute
+  '/my-events': typeof MyEventsRoute
+  '/notifications': typeof NotificationsRoute
+  '/organize': typeof OrganizeRoute
+  '/profile': typeof ProfileRoute
+  '/saved': typeof SavedRoute
+  '/sports': typeof SportsRouteWithChildren
+  '/events/$eventId': typeof EventsEventIdRouteWithChildren
+  '/sports/$sport': typeof SportsSportRoute
+  '/sports/indoor': typeof SportsIndoorRoute
+  '/sports/outdoor': typeof SportsOutdoorRoute
+  '/events/$eventId/register': typeof EventsEventIdRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/explore'
+    | '/invite'
+    | '/login'
+    | '/my-events'
+    | '/notifications'
+    | '/organize'
+    | '/profile'
+    | '/saved'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sport'
+    | '/sports/indoor'
+    | '/sports/outdoor'
+    | '/events/$eventId/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/explore'
+    | '/invite'
+    | '/login'
+    | '/my-events'
+    | '/notifications'
+    | '/organize'
+    | '/profile'
+    | '/saved'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sport'
+    | '/sports/indoor'
+    | '/sports/outdoor'
+    | '/events/$eventId/register'
+  id:
+    | '__root__'
+    | '/'
+    | '/explore'
+    | '/invite'
+    | '/login'
+    | '/my-events'
+    | '/notifications'
+    | '/organize'
+    | '/profile'
+    | '/saved'
+    | '/sports'
+    | '/events/$eventId'
+    | '/sports/$sport'
+    | '/sports/indoor'
+    | '/sports/outdoor'
+    | '/events/$eventId/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExploreRoute: typeof ExploreRoute
+  InviteRoute: typeof InviteRoute
+  LoginRoute: typeof LoginRoute
+  MyEventsRoute: typeof MyEventsRoute
+  NotificationsRoute: typeof NotificationsRoute
+  OrganizeRoute: typeof OrganizeRoute
+  ProfileRoute: typeof ProfileRoute
+  SavedRoute: typeof SavedRoute
+  SportsRoute: typeof SportsRouteWithChildren
+  EventsEventIdRoute: typeof EventsEventIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sports': {
+      id: '/sports'
+      path: '/sports'
+      fullPath: '/sports'
+      preLoaderRoute: typeof SportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organize': {
+      id: '/organize'
+      path: '/organize'
+      fullPath: '/organize'
+      preLoaderRoute: typeof OrganizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/my-events': {
+      id: '/my-events'
+      path: '/my-events'
+      fullPath: '/my-events'
+      preLoaderRoute: typeof MyEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invite': {
+      id: '/invite'
+      path: '/invite'
+      fullPath: '/invite'
+      preLoaderRoute: typeof InviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +293,84 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sports/outdoor': {
+      id: '/sports/outdoor'
+      path: '/outdoor'
+      fullPath: '/sports/outdoor'
+      preLoaderRoute: typeof SportsOutdoorRouteImport
+      parentRoute: typeof SportsRoute
+    }
+    '/sports/indoor': {
+      id: '/sports/indoor'
+      path: '/indoor'
+      fullPath: '/sports/indoor'
+      preLoaderRoute: typeof SportsIndoorRouteImport
+      parentRoute: typeof SportsRoute
+    }
+    '/sports/$sport': {
+      id: '/sports/$sport'
+      path: '/$sport'
+      fullPath: '/sports/$sport'
+      preLoaderRoute: typeof SportsSportRouteImport
+      parentRoute: typeof SportsRoute
+    }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId/register': {
+      id: '/events/$eventId/register'
+      path: '/register'
+      fullPath: '/events/$eventId/register'
+      preLoaderRoute: typeof EventsEventIdRegisterRouteImport
+      parentRoute: typeof EventsEventIdRoute
+    }
   }
 }
 
+interface SportsRouteChildren {
+  SportsSportRoute: typeof SportsSportRoute
+  SportsIndoorRoute: typeof SportsIndoorRoute
+  SportsOutdoorRoute: typeof SportsOutdoorRoute
+}
+
+const SportsRouteChildren: SportsRouteChildren = {
+  SportsSportRoute: SportsSportRoute,
+  SportsIndoorRoute: SportsIndoorRoute,
+  SportsOutdoorRoute: SportsOutdoorRoute,
+}
+
+const SportsRouteWithChildren =
+  SportsRoute._addFileChildren(SportsRouteChildren)
+
+interface EventsEventIdRouteChildren {
+  EventsEventIdRegisterRoute: typeof EventsEventIdRegisterRoute
+}
+
+const EventsEventIdRouteChildren: EventsEventIdRouteChildren = {
+  EventsEventIdRegisterRoute: EventsEventIdRegisterRoute,
+}
+
+const EventsEventIdRouteWithChildren = EventsEventIdRoute._addFileChildren(
+  EventsEventIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExploreRoute: ExploreRoute,
+  InviteRoute: InviteRoute,
+  LoginRoute: LoginRoute,
+  MyEventsRoute: MyEventsRoute,
+  NotificationsRoute: NotificationsRoute,
+  OrganizeRoute: OrganizeRoute,
+  ProfileRoute: ProfileRoute,
+  SavedRoute: SavedRoute,
+  SportsRoute: SportsRouteWithChildren,
+  EventsEventIdRoute: EventsEventIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
