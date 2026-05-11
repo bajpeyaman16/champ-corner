@@ -26,7 +26,7 @@ const schema = z.object({
   address: z.string().trim().min(3).max(200),
   city: z.string().trim().min(2).max(60),
   state: z.string().trim().min(2).max(60),
-  members: z.coerce.number().min(1).max(20),
+  members: z.number({ error: "Required" }).min(1).max(20),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -119,7 +119,7 @@ function Register() {
                 </Field>
               </div>
               <Field label="Team Members" error={form.formState.errors.members?.message}>
-                <input type="number" {...form.register("members")} className={inputCls} />
+                <input type="number" {...form.register("members", { valueAsNumber: true })} className={inputCls} />
               </Field>
             </div>
             <button type="submit" className="w-full py-4 rounded-3xl bg-gradient-primary text-primary-foreground font-bold shadow-glow">

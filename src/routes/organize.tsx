@@ -10,11 +10,11 @@ export const Route = createFileRoute("/organize")({
   head: () => ({ meta: [{ title: "Organize Event — Eventra" }] }),
 });
 
-const blank = {
+const blank: Omit<OrganizedEvent, "id" | "status" | "createdAt"> = {
   title: "",
   description: "",
   category: "Cricket",
-  type: "Outdoor" as const,
+  type: "Outdoor",
   prizePool: "",
   venue: "",
   date: "",

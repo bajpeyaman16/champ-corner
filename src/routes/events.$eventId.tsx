@@ -98,7 +98,7 @@ function EventDetails() {
           )}
           {tab === "Rules" && (
             <ul className="space-y-2 text-sm">
-              {e.rules.map((r, i) => (
+              {e.rules.map((r: string, i: number) => (
                 <li key={i} className="flex gap-2">
                   <span className="text-primary font-bold">{String(i + 1).padStart(2, "0")}.</span>
                   <span className="text-muted-foreground">{r}</span>
