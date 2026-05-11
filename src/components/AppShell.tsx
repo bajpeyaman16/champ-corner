@@ -90,7 +90,7 @@ export function BottomNav() {
           return (
             <Link
               key={t.to}
-              to={t.to}
+              to={t.to as "/"}
               className={`flex-1 flex flex-col items-center gap-0.5 py-2 rounded-2xl transition ${
                 active ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground"
               }`}
