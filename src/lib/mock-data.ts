@@ -61,6 +61,7 @@ export const INDOOR_SPORTS = [
 export const TOURNAMENTS: Tournament[] = [
   {
     id: "indoor-premier-league",
+    category: "sports",
     sport: "Cricket",
     name: "Indoor Premier League",
     organizer: "Bhopal Sports Club",
@@ -79,6 +80,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "bhopal-cricket-cup",
+    category: "sports",
     sport: "Cricket",
     name: "Bhopal Cricket Cup",
     organizer: "MP Cricket Federation",
@@ -96,6 +98,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "champions-cricket-league",
+    category: "sports",
     sport: "Cricket",
     name: "Champions Cricket League",
     organizer: "Champions Sports",
@@ -113,6 +116,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "gwalior-super-league",
+    category: "sports",
     sport: "Cricket",
     name: "Gwalior Super League",
     organizer: "Gwalior Sports",
@@ -130,6 +134,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "ujjain-premier-league",
+    category: "sports",
     sport: "Cricket",
     name: "Ujjain Premier League",
     organizer: "UPL Org",
@@ -147,6 +152,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "bhopal-football-derby",
+    category: "sports",
     sport: "Football",
     name: "Bhopal Football Derby",
     organizer: "BFC Org",
@@ -165,6 +171,7 @@ export const TOURNAMENTS: Tournament[] = [
   },
   {
     id: "city-badminton-open",
+    category: "sports",
     sport: "Badminton",
     name: "City Badminton Open",
     organizer: "Smash Club",
