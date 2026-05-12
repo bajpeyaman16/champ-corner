@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, Home, Compass, Calendar, User, Search, SlidersHorizontal, Menu } from "lucide-react";
 import { useState } from "react";
 import { AppDrawer } from "./AppDrawer";
@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/app-store";
 
 export function AppHeader({ title, greeting, showSearch = true }: { title?: string; greeting?: string; showSearch?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
   const { user } = useAuth();
   return (
     <header className="sticky top-0 z-30 px-4 pt-4 pb-3 bg-background/60 backdrop-blur-xl border-b border-border">
@@ -53,18 +55,31 @@ export function AppHeader({ title, greeting, showSearch = true }: { title?: stri
         )}
 
         {showSearch && (
-          <div className="mt-4 flex items-center gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate({ to: "/explore", search: { q: q || undefined, category: undefined, city: undefined } });
+            }}
+            className="mt-4 flex items-center gap-2"
+          >
             <div className="flex-1 flex items-center gap-2 px-4 h-12 rounded-2xl glass">
               <Search className="size-4 text-muted-foreground" />
               <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
                 placeholder="Search events, sports, cities..."
                 className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
               />
             </div>
-            <button className="size-12 rounded-2xl bg-gradient-primary grid place-items-center text-primary-foreground shadow-glow">
+            <button
+              type="button"
+              onClick={() => navigate({ to: "/explore", search: { q: undefined, category: undefined, city: undefined } })}
+              className="size-12 rounded-2xl bg-gradient-primary grid place-items-center text-primary-foreground shadow-glow"
+              aria-label="Filters"
+            >
               <SlidersHorizontal className="size-5" />
             </button>
-          </div>
+          </form>
         )}
       </div>
       <AppDrawer open={open} onOpenChange={setOpen} />

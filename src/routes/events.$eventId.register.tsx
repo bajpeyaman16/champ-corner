@@ -178,12 +178,20 @@ function Register() {
                 <Download className="size-4" /> Download Receipt
               </button>
             </div>
-            <button
-              onClick={() => navigate({ to: "/my-events" })}
-              className="w-full py-4 rounded-3xl bg-gradient-primary text-primary-foreground font-bold shadow-glow"
-            >
-              Go to My Events
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => navigate({ to: "/" })}
+                className="py-4 rounded-3xl glass font-bold"
+              >
+                Back to Home
+              </button>
+              <button
+                onClick={() => navigate({ to: "/my-events" })}
+                className="py-4 rounded-3xl bg-gradient-primary text-primary-foreground font-bold shadow-glow"
+              >
+                Go to My Events
+              </button>
+            </div>
           </div>
         )}
       </main>

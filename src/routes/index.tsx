@@ -42,7 +42,11 @@ function Home() {
           {CATEGORIES.map((c) => (
             <button
               key={c.slug}
-              onClick={() => c.slug === "sports" ? navigate({ to: "/sports" }) : null}
+              onClick={() =>
+                c.slug === "sports"
+                  ? navigate({ to: "/sports" })
+                  : navigate({ to: "/explore", search: { category: c.slug, q: undefined, city: undefined } })
+              }
               className="glass rounded-2xl p-3 flex flex-col items-center gap-2 hover:scale-105 transition"
             >
               <span className={`size-12 rounded-2xl bg-gradient-to-br ${c.color} grid place-items-center text-2xl`}>
