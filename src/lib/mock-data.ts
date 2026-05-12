@@ -1,5 +1,8 @@
+export type Category = "sports" | "technical" | "academics" | "more";
+
 export type Tournament = {
   id: string;
+  category: Category;
   sport: string;
   name: string;
   organizer: string;
