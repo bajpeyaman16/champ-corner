@@ -45,7 +45,7 @@ function Explore() {
   }, [q, category, city]);
 
   const updateSearch = (patch: Partial<Search>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: Search) => ({ ...prev, ...patch }) });
 
   const activeChips: { label: string; onClear: () => void }[] = [];
   if (q) activeChips.push({ label: `“${q}”`, onClear: () => updateSearch({ q: undefined }) });
