@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Bell, Home, Compass, Calendar, User, Search, SlidersHorizontal, Menu } from "lucide-react";
 import { useState } from "react";
 import { AppDrawer } from "./AppDrawer";
