@@ -6,6 +6,8 @@ import { useAuth } from "@/lib/app-store";
 
 export function AppHeader({ title, greeting, showSearch = true }: { title?: string; greeting?: string; showSearch?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
   const { user } = useAuth();
   return (
     <header className="sticky top-0 z-30 px-4 pt-4 pb-3 bg-background/60 backdrop-blur-xl border-b border-border">
