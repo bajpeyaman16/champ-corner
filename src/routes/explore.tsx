@@ -4,9 +4,9 @@ import { EventCard } from "@/components/EventCard";
 import { TOURNAMENTS, CATEGORIES, type Category } from "@/lib/mock-data";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
-
+ 
 type Search = { q?: string; category?: Category; city?: string };
-
+ 
 export const Route = createFileRoute("/explore")({
   component: Explore,
   validateSearch: (s: Record<string, unknown>): Search => ({
@@ -23,14 +23,14 @@ export const Route = createFileRoute("/explore")({
     ],
   }),
 });
-
+ 
 function Explore() {
   const { q, category, city } = Route.useSearch();
   const navigate = useNavigate({ from: "/explore" });
   const [showFilter, setShowFilter] = useState(false);
-
+ 
   const cities = useMemo(() => Array.from(new Set(TOURNAMENTS.map((t) => t.city))).sort(), []);
-
+ 
   const results = useMemo(() => {
     const term = q?.toLowerCase().trim();
     return TOURNAMENTS.filter((t) => {
@@ -43,30 +43,40 @@ function Explore() {
       return true;
     });
   }, [q, category, city]);
-
+ 
   const updateSearch = (patch: Partial<Search>) =>
     navigate({ search: (prev: Search) => ({ ...prev, ...patch }) });
-
+ 
   const activeChips: { label: string; onClear: () => void }[] = [];
-  if (q) activeChips.push({ label: `“${q}”`, onClear: () => updateSearch({ q: undefined }) });
+  if (q) activeChips.push({ label: `"${q}"`, onClear: () => updateSearch({ q: undefined }) });
   if (category) {
     const cat = CATEGORIES.find((c) => c.slug === category);
     if (cat) activeChips.push({ label: cat.name, onClear: () => updateSearch({ category: undefined }) });
   }
   if (city) activeChips.push({ label: city, onClear: () => updateSearch({ city: undefined }) });
-
+ 
   return (
     <PageShell title="Explore">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm text-muted-foreground">{results.length} event{results.length === 1 ? "" : "s"} found</p>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          {results.length} event{results.length === 1 ? "" : "s"} found
+        </p>
         <button
           onClick={() => setShowFilter((v) => !v)}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl glass text-xs font-semibold"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-xl glass text-xs sm:text-sm font-semibold"
         >
-          <SlidersHorizontal className="size-3.5" /> Filters
+          <SlidersHorizontal className="size-3.5" />
+          <span>Filters</span>
+          {(category || city) && (
+            <span className="size-4 rounded-full bg-primary text-primary-foreground text-[9px] grid place-items-center font-bold">
+              {[category, city].filter(Boolean).length}
+            </span>
+          )}
         </button>
       </div>
-
+ 
+      {/* Filter panel */}
       {showFilter && (
         <div className="glass-strong rounded-3xl p-4 mb-4 space-y-4">
           <div>
@@ -76,7 +86,7 @@ function Explore() {
                 <button
                   key={c.slug}
                   onClick={() => updateSearch({ category: category === c.slug ? undefined : c.slug })}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                     category === c.slug ? "bg-gradient-primary text-primary-foreground" : "glass text-muted-foreground"
                   }`}
                 >
@@ -92,7 +102,7 @@ function Explore() {
                 <button
                   key={c}
                   onClick={() => updateSearch({ city: city === c ? undefined : c })}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition ${
                     city === c ? "bg-gradient-primary text-primary-foreground" : "glass text-muted-foreground"
                   }`}
                 >
@@ -103,7 +113,8 @@ function Explore() {
           </div>
         </div>
       )}
-
+ 
+      {/* Active filter chips */}
       {activeChips.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           {activeChips.map((c) => (
@@ -112,9 +123,16 @@ function Explore() {
               <button onClick={c.onClear} aria-label="Clear"><X className="size-3" /></button>
             </span>
           ))}
+          <button
+            onClick={() => navigate({ search: {} })}
+            className="px-3 py-1 rounded-full text-xs text-destructive glass"
+          >
+            Clear all
+          </button>
         </div>
       )}
-
+ 
+      {/* Results */}
       {results.length === 0 ? (
         <div className="glass-strong rounded-3xl p-10 text-center">
           <p className="text-muted-foreground text-sm">No events match your filters.</p>
@@ -126,7 +144,8 @@ function Explore() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        /* Mobile: 1-col | Tablet: 2-col | Desktop: 2-col */
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {results.map((e) => <EventCard key={e.id} e={e} />)}
         </div>
       )}

@@ -1,18 +1,22 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { TOURNAMENTS, SPORT_ICONS } from "@/lib/mock-data";
-
+import { TOURNAMENTS, SPORT_ICONS, OUTDOOR_SPORTS, INDOOR_SPORTS } from "@/lib/mock-data";
+ 
 export const Route = createFileRoute("/sports/$sport")({
   component: SportPage,
   loader: ({ params }) => {
     const sport = params.sport.toLowerCase();
-    const all = Object.keys(SPORT_ICONS).map((s) => s.toLowerCase());
-    if (!all.includes(sport)) throw notFound();
+    const validOutdoor = OUTDOOR_SPORTS.map((s) => s.slug.toLowerCase());
+    const validIndoor = INDOOR_SPORTS.map((s) => s.name.toLowerCase());
+    const allValid = [...validOutdoor, ...validIndoor];
+    if (!allValid.includes(sport)) throw notFound();
     return { sport };
   },
   notFoundComponent: () => (
-    <PageShell title="Not found"><p className="text-muted-foreground">No tournaments for this sport yet.</p></PageShell>
+    <PageShell title="Not found">
+      <p className="text-muted-foreground">No tournaments for this sport yet.</p>
+    </PageShell>
   ),
   head: ({ params }) => ({
     meta: [
@@ -21,25 +25,32 @@ export const Route = createFileRoute("/sports/$sport")({
     ],
   }),
 });
-
+ 
 function cap(s: string) {
-  return s.split(" ").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+  return s
+    .split(" ")
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
 }
-
+ 
 function SportPage() {
   const { sport } = Route.useLoaderData();
   const display = cap(sport);
   const list = TOURNAMENTS.filter((t) => t.sport.toLowerCase() === sport);
-
+  const icon = SPORT_ICONS[display] ?? "🏆";
+ 
   return (
-    <PageShell title={`${SPORT_ICONS[display] ?? "🏆"} ${display}`}>
+    <PageShell title={`${icon} ${display}`}>
       {list.length === 0 ? (
-        <div className="glass-strong rounded-3xl p-8 text-center text-muted-foreground">
+        <div className="glass-strong rounded-3xl p-8 sm:p-10 text-center text-muted-foreground">
           No {display} tournaments yet — check back soon.
         </div>
       ) : (
-        <div className="space-y-4">
-          {list.map((e) => <EventCard key={e.id} e={e} />)}
+        /* Mobile: 1-col | Tablet: 2-col */
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {list.map((e) => (
+            <EventCard key={e.id} e={e} />
+          ))}
         </div>
       )}
     </PageShell>

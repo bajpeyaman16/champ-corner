@@ -18,6 +18,7 @@ import { Route as MyEventsRouteImport } from './routes/my-events'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InviteRouteImport } from './routes/invite'
 import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as SportRouteImport } from './routes/$sport'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SportsOutdoorRouteImport } from './routes/sports.outdoor'
 import { Route as SportsIndoorRouteImport } from './routes/sports.indoor'
@@ -70,6 +71,11 @@ const ExploreRoute = ExploreRouteImport.update({
   path: '/explore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SportRoute = SportRouteImport.update({
+  id: '/$sport',
+  path: '/$sport',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -103,6 +109,7 @@ const EventsEventIdRegisterRoute = EventsEventIdRegisterRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$sport': typeof SportRoute
   '/explore': typeof ExploreRoute
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$sport': typeof SportRoute
   '/explore': typeof ExploreRoute
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$sport': typeof SportRoute
   '/explore': typeof ExploreRoute
   '/invite': typeof InviteRoute
   '/login': typeof LoginRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/$sport'
     | '/explore'
     | '/invite'
     | '/login'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$sport'
     | '/explore'
     | '/invite'
     | '/login'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/$sport'
     | '/explore'
     | '/invite'
     | '/login'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SportRoute: typeof SportRoute
   ExploreRoute: typeof ExploreRoute
   InviteRoute: typeof InviteRoute
   LoginRoute: typeof LoginRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExploreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$sport': {
+      id: '/$sport'
+      path: '/$sport'
+      fullPath: '/$sport'
+      preLoaderRoute: typeof SportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -360,6 +380,7 @@ const EventsEventIdRouteWithChildren = EventsEventIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SportRoute: SportRoute,
   ExploreRoute: ExploreRoute,
   InviteRoute: InviteRoute,
   LoginRoute: LoginRoute,
