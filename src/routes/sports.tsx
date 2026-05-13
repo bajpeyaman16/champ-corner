@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { ArrowRight } from "lucide-react";
 
@@ -13,6 +13,12 @@ export const Route = createFileRoute("/sports")({
 });
 
 function SportsLanding() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  if (pathname !== "/sports") {
+    return <Outlet />;
+  }
+
   return (
     <PageShell title="Sports">
       <div className="space-y-5">
