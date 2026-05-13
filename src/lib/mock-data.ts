@@ -189,6 +189,8 @@ export const TOURNAMENTS = [
 // ─── FEATURED (index.tsx use karta hai) ──────────────────────
 // TOURNAMENTS ka subset — pehle 2 featured hain
 export const FEATURED = TOURNAMENTS.slice(0, 2);
+
+export type Tournament = (typeof TOURNAMENTS)[number] & { isLive?: boolean };
  
 // ─── NOTIFICATIONS (notifications.tsx use karta hai) ─────────
 export const NOTIFICATIONS = [
