@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, notFound, useRouterState } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { TOURNAMENTS } from "@/lib/mock-data";
 import { useSavedEvents } from "@/lib/app-store";
@@ -33,8 +33,10 @@ const TABS = ["Details", "Rules", "Participants", "Reviews"] as const;
  
 function EventDetails() {
   const { event: e } = Route.useLoaderData();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const saved = useSavedEvents();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Details");
+  if (pathname !== `/events/${e.id}`) return <Outlet />;
  
   return (
     <div className="min-h-screen pb-28 sm:pb-32">
