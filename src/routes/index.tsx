@@ -19,15 +19,14 @@ export const Route = createFileRoute("/")({
 });
  
 function Home() {
-  const { user, login } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
- 
+
   useEffect(() => {
-    if (!user) login({ name: "Jon Snow", email: "jon@eventra.app", phone: "+91 98765 43210" });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
- 
-  const greeting = (user?.name ?? "Jon").split(" ")[0];
+    if (!loading && !isAuthenticated) navigate({ to: "/login" });
+  }, [loading, isAuthenticated, navigate]);
+
+  const greeting = (user?.name ?? "Player").split(" ")[0];
  
   return (
     <PageShell greeting={greeting}>
