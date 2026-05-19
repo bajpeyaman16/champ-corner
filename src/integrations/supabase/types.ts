@@ -14,7 +14,183 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          banner: string | null
+          category: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          date: string | null
+          description: string | null
+          entry_fee: string | null
+          format: string | null
+          id: string
+          name: string
+          organizer: string | null
+          prize_pool: string | null
+          rating: number | null
+          rules: Json | null
+          slots: string | null
+          sport: string | null
+          status: string
+          team_size: string | null
+          type: string | null
+          venue: string | null
+        }
+        Insert: {
+          banner?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          description?: string | null
+          entry_fee?: string | null
+          format?: string | null
+          id: string
+          name: string
+          organizer?: string | null
+          prize_pool?: string | null
+          rating?: number | null
+          rules?: Json | null
+          slots?: string | null
+          sport?: string | null
+          status?: string
+          team_size?: string | null
+          type?: string | null
+          venue?: string | null
+        }
+        Update: {
+          banner?: string | null
+          category?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          description?: string | null
+          entry_fee?: string | null
+          format?: string | null
+          id?: string
+          name?: string
+          organizer?: string | null
+          prize_pool?: string | null
+          rating?: number | null
+          rules?: Json | null
+          slots?: string | null
+          sport?: string | null
+          status?: string
+          team_size?: string | null
+          type?: string | null
+          venue?: string | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          dob: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          dob?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+        }
+        Relationships: []
+      }
+      registrations: {
+        Row: {
+          captain: string | null
+          event_id: string
+          id: string
+          paid_at: string
+          team_name: string | null
+          txn_id: string | null
+          user_id: string
+        }
+        Insert: {
+          captain?: string | null
+          event_id: string
+          id?: string
+          paid_at?: string
+          team_name?: string | null
+          txn_id?: string | null
+          user_id: string
+        }
+        Update: {
+          captain?: string | null
+          event_id?: string
+          id?: string
+          paid_at?: string
+          team_name?: string | null
+          txn_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
