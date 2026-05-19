@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAuth } from "@/lib/app-store";
 import { toast } from "sonner";
- 
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+
 export const Route = createFileRoute("/login")({
   component: Login,
   head: () => ({ meta: [{ title: "Login — Eventra" }] }),
 });
- 
+
 function Login() {
-  const { login } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
@@ -18,42 +18,71 @@ function Login() {
   const [dob, setDob] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
- 
-  const submit = (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return toast.error("Email and password required");
     if (mode === "register") {
       if (!name) return toast.error("Full name required");
       if (!dob) return toast.error("Date of birth required");
+      if (password.length < 6) return toast.error("Password must be 6+ characters");
       if (password !== confirm) return toast.error("Passwords do not match");
     }
-    login({ name: name || email.split("@")[0], email, phone });
-    toast.success(mode === "login" ? "Welcome back!" : "Account created");
-    navigate({ to: "/" });
+    setBusy(true);
+    try {
+      if (mode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { full_name: name, phone, dob },
+          },
+        });
+        if (error) throw error;
+        toast.success("Account created — please sign in");
+        setMode("login");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast.success("Welcome back!");
+        navigate({ to: "/" });
+      }
+    } catch (err: any) {
+      toast.error(err.message ?? "Authentication failed");
+    } finally {
+      setBusy(false);
+    }
   };
- 
-  const social = (provider: "Google" | "Facebook") => {
-    const demo = {
-      Google: { name: "Google User", email: "user@gmail.com" },
-      Facebook: { name: "FB User", email: "user@facebook.com" },
-    }[provider];
-    login({ name: demo.name, email: demo.email });
-    toast.success(`Signed in with ${provider}`);
-    navigate({ to: "/" });
+
+  const google = async () => {
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(result.error.message ?? "Google sign-in failed");
+        return;
+      }
+      if (result.redirected) return; // browser navigated away
+      toast.success("Signed in with Google");
+      navigate({ to: "/" });
+    } finally {
+      setBusy(false);
+    }
   };
- 
+
   return (
-    /* Full screen, centered — works on all screen sizes */
     <div className="min-h-screen grid place-items-center px-4 py-8 sm:py-12">
       <div className="w-full max-w-sm sm:max-w-md">
-        {/* Brand */}
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="font-display text-3xl sm:text-4xl font-bold text-gradient-gold">EVENTRA</h1>
           <p className="text-sm text-muted-foreground mt-1">Premium sports event platform</p>
         </div>
- 
+
         <div className="glass-strong rounded-3xl p-5 sm:p-8">
-          {/* Mode toggle */}
           <div className="flex gap-2 p-1 glass rounded-xl">
             {(["login", "register"] as const).map((m) => (
               <button
@@ -67,109 +96,65 @@ function Login() {
               </button>
             ))}
           </div>
- 
-          {/* Form */}
+
           <form onSubmit={submit} className="mt-5 grid gap-3">
             {mode === "register" && (
-              <input
-                className={ic}
-                placeholder="Full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <input className={ic} placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} />
             )}
-            <input
-              className={ic}
-              placeholder="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <input className={ic} placeholder="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             {mode === "register" && (
               <>
-                <input
-                  className={ic}
-                  placeholder="Mobile (+91...)"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+                <input className={ic} placeholder="Mobile (+91...)" value={phone} onChange={(e) => setPhone(e.target.value)} />
                 <label className="block">
                   <span className="text-[11px] text-muted-foreground ml-1">Date of birth</span>
-                  <input
-                    className={ic + " mt-1"}
-                    type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                  />
+                  <input className={ic + " mt-1"} type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
                 </label>
               </>
             )}
-            <input
-              className={ic}
-              placeholder="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+            <input className={ic} placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             {mode === "register" && (
-              <input
-                className={ic}
-                placeholder="Confirm password"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
+              <input className={ic} placeholder="Confirm password" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             )}
             <button
               type="submit"
-              className="mt-2 py-3 sm:py-3.5 rounded-2xl bg-gradient-primary text-primary-foreground font-bold shadow-glow text-sm sm:text-base"
+              disabled={busy}
+              className="mt-2 py-3 sm:py-3.5 rounded-2xl bg-gradient-primary text-primary-foreground font-bold shadow-glow text-sm sm:text-base disabled:opacity-60"
             >
-              {mode === "login" ? "Sign in" : "Create account"}
+              {busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
             </button>
           </form>
- 
-          {/* Divider */}
+
           <div className="my-5 flex items-center gap-3">
             <span className="flex-1 h-px bg-border" />
             <span className="text-[11px] uppercase tracking-wider text-muted-foreground">or continue with</span>
             <span className="flex-1 h-px bg-border" />
           </div>
- 
-          {/* Social buttons — stacked on very small screens, side-by-side otherwise */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => social("Google")}
-              className="h-11 rounded-2xl glass flex items-center justify-center gap-2 text-sm font-semibold hover:scale-[1.02] active:scale-95 transition"
-            >
-              <GoogleIcon /> Google
-            </button>
-            <button
-              type="button"
-              onClick={() => social("Facebook")}
-              className="h-11 rounded-2xl flex items-center justify-center gap-2 text-sm font-semibold text-white hover:scale-[1.02] active:scale-95 transition"
-              style={{ background: "#1877F2" }}
-            >
-              <FacebookIcon /> Facebook
-            </button>
-          </div>
- 
+
+          <button
+            type="button"
+            onClick={google}
+            disabled={busy}
+            className="w-full h-11 rounded-2xl glass flex items-center justify-center gap-2 text-sm font-semibold hover:scale-[1.01] active:scale-95 transition disabled:opacity-60"
+          >
+            <GoogleIcon /> Continue with Google
+          </button>
+
           <div className="mt-4 text-center">
-            <Link to="/" className="text-xs text-muted-foreground underline">Continue as guest</Link>
+            <Link to="/" className="text-xs text-muted-foreground underline">Back to home</Link>
           </div>
         </div>
- 
+
         <p className="text-[11px] text-muted-foreground text-center mt-4">
-          Frontend demo — auth runs locally in your browser.
+          Secured by Lovable Cloud.
         </p>
       </div>
     </div>
   );
 }
- 
+
 const ic =
   "w-full h-12 px-4 rounded-xl glass text-sm outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground";
- 
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
@@ -177,14 +162,6 @@ function GoogleIcon() {
       <path fill="#FF3D00" d="M3.2 7.3l3.2 2.4c.9-2.2 3-3.7 5.6-3.7 1.5 0 2.9.5 4 1.5l2.8-2.8C16.9 3.1 14.6 2 12 2 8.1 2 4.7 4.2 3.2 7.3z" />
       <path fill="#4CAF50" d="M12 22c2.5 0 4.8-.9 6.6-2.5l-3-2.5c-1 .7-2.2 1.1-3.6 1.1-2.9 0-5.1-1.5-5.6-3.9l-3.2 2.5C4.7 19.7 8.1 22 12 22z" />
       <path fill="#1976D2" d="M21.8 10.2H12v3.9h5.6c-.3 1.3-1 2.4-2 3.1l3 2.5c1.7-1.6 2.8-4 2.8-7.4 0-.7-.1-1.4-.2-2.1z" />
-    </svg>
-  );
-}
- 
-function FacebookIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4 fill-white" aria-hidden>
-      <path d="M22 12a10 10 0 10-11.6 9.9v-7H8v-2.9h2.4V9.8c0-2.4 1.4-3.7 3.6-3.7 1 0 2.1.2 2.1.2v2.3h-1.2c-1.2 0-1.5.7-1.5 1.5v1.8h2.6l-.4 2.9h-2.2v7A10 10 0 0022 12z" />
     </svg>
   );
 }
