@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { useAuth, useOrganized } from "@/lib/app-store";
-import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Calendar, MapPin, Trophy, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Trophy, Trash2, ImagePlus, X } from "lucide-react";
 
 export const Route = createFileRoute("/organize")({
   component: Organize,
