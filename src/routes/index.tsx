@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { CATEGORIES, FEATURED } from "@/lib/mock-data";
-import { useAuth } from "@/lib/app-store";
+import { CATEGORIES } from "@/lib/mock-data";
+import { useAuth, useAllEvents } from "@/lib/app-store";
 import { useEffect } from "react";
 import { ChevronRight, MapPin, TrendingUp, Trophy, Users, Zap } from "lucide-react";
  
