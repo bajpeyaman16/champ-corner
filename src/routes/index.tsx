@@ -115,7 +115,11 @@ function Home() {
       <section>
         <SectionHeader title="Featured Events" actionTo="/explore" />
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {FEATURED.map((e) => <EventCard key={e.id} e={e} />)}
+          {featured.length === 0 ? (
+            <p className="text-sm text-zinc-500 col-span-full">No events yet — be the first to organize one!</p>
+          ) : (
+            featured.map((e) => <EventCard key={e.id} e={e} />)
+          )}
         </div>
       </section>
  
