@@ -1,42 +1,34 @@
-import { createFileRoute, Link, Outlet, notFound, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
-import { TOURNAMENTS } from "@/lib/mock-data";
-import { useSavedEvents } from "@/lib/app-store";
+import { useSavedEvents, useAllEvents } from "@/lib/app-store";
 import { Calendar, MapPin, Trophy, Users, Bookmark, Share2, Star } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
  
 export const Route = createFileRoute("/events/$eventId")({
   component: EventDetails,
-  loader: ({ params }) => {
-    const e = TOURNAMENTS.find((t) => t.id === params.eventId);
-    if (!e) throw notFound();
-    return { event: e };
-  },
-  notFoundComponent: () => (
-    <PageShell title="Not found"><p className="text-muted-foreground">Event not found.</p></PageShell>
-  ),
-  head: ({ loaderData }) => ({
-    meta: loaderData?.event
-      ? [
-          { title: `${loaderData.event.name} — Eventra` },
-          { name: "description", content: `${loaderData.event.name} at ${loaderData.event.venue}, ${loaderData.event.city}.` },
-          { property: "og:title", content: loaderData.event.name },
-          { property: "og:description", content: `${loaderData.event.organizer} · ${loaderData.event.date}` },
-          { property: "og:image", content: loaderData.event.banner },
-        ]
-      : [],
+  head: () => ({
+    meta: [{ title: "Event — Eventra" }],
   }),
 });
  
 const TABS = ["Details", "Rules", "Participants", "Reviews"] as const;
  
 function EventDetails() {
-  const { event: e } = Route.useLoaderData();
+  const { eventId } = Route.useParams();
+  const { list: allEvents } = useAllEvents();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const saved = useSavedEvents();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Details");
-  if (pathname !== `/events/${e.id}`) return <Outlet />;
+  const e = allEvents.find((t) => t.id === eventId);
+  if (pathname !== `/events/${eventId}`) return <Outlet />;
+  if (!e) {
+    return (
+      <PageShell title="Loading…">
+        <p className="text-muted-foreground text-sm">Loading event…</p>
+      </PageShell>
+    );
+  }
  
   return (
     <div className="min-h-screen pb-28 sm:pb-32">
