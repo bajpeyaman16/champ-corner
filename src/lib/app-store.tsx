@@ -27,6 +27,7 @@ export type OrganizedEvent = {
   rules: string;
   status: "draft" | "published";
   createdAt: string;
+  banner?: string;
 };
 
 export type DbEvent = {
