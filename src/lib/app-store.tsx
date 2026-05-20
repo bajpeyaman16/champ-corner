@@ -29,6 +29,27 @@ export type OrganizedEvent = {
   createdAt: string;
 };
 
+export type DbEvent = {
+  id: string;
+  name: string;
+  sport: string;
+  category: string;
+  organizer: string;
+  venue: string;
+  city: string;
+  date: string;
+  prizePool: string;
+  entryFee: string;
+  slots: string;
+  format: string;
+  teamSize: string;
+  rating: number;
+  banner: string;
+  rules: string[];
+  type: "Indoor" | "Outdoor";
+  isLive?: boolean;
+};
+
 type Ctx = {
   authUser: User | null;
   profile: Profile;
@@ -37,8 +58,35 @@ type Ctx = {
   savedIds: string[];
   registrations: Registration[];
   organized: OrganizedEvent[];
+  allEvents: DbEvent[];
   refresh: () => Promise<void>;
+  refreshAllEvents: () => Promise<void>;
 };
+
+const FALLBACK_BANNER =
+  "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80";
+
+function mapDbEvent(e: any): DbEvent {
+  return {
+    id: e.id,
+    name: e.name,
+    sport: e.sport ?? e.category ?? "Sports",
+    category: e.category ?? "sports",
+    organizer: e.organizer ?? "Organizer",
+    venue: e.venue ?? "",
+    city: e.city ?? e.venue ?? "",
+    date: e.date ?? "",
+    prizePool: e.prize_pool ?? "",
+    entryFee: e.entry_fee ?? "Free",
+    slots: e.slots ?? "",
+    format: e.format ?? "—",
+    teamSize: e.team_size ?? "—",
+    rating: Number(e.rating ?? 4.0),
+    banner: e.banner || FALLBACK_BANNER,
+    rules: Array.isArray(e.rules) ? e.rules : [],
+    type: (e.type as "Indoor" | "Outdoor") ?? "Outdoor",
+  };
+}
 
 const AppCtx = createContext<Ctx | null>(null);
 
@@ -48,7 +96,17 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [organized, setOrganized] = useState<OrganizedEvent[]>([]);
+  const [allEvents, setAllEvents] = useState<DbEvent[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const refreshAllEvents = useCallback(async () => {
+    const { data } = await supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .order("created_at", { ascending: false });
+    setAllEvents((data ?? []).map(mapDbEvent));
+  }, []);
 
   const refresh = useCallback(async () => {
     const { data: sessionData } = await supabase.auth.getSession();
