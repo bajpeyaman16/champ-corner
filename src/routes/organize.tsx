@@ -31,6 +31,30 @@ function Organize() {
   const [teamLimit, setTeamLimit] = useState(8);
   const [rules, setRules] = useState("");
   const [busy, setBusy] = useState(false);
+  const [bannerUrl, setBannerUrl] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const uploadBanner = async (file: File) => {
+    const { data: sess } = await supabase.auth.getSession();
+    const uid = sess.session?.user.id;
+    if (!uid) return toast.error("Please sign in again");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${uid}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("event-banners").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("event-banners").getPublicUrl(path);
+      setBannerUrl(data.publicUrl);
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      toast.error(err.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,9 +75,10 @@ function Organize() {
         rules,
         status: "published",
         createdAt: new Date().toISOString(),
+        banner: bannerUrl || undefined,
       });
-      toast.success("Event published");
-      setTitle(""); setDescription(""); setPrizePool(""); setVenue(""); setDate(""); setEntryFee(""); setRules("");
+      toast.success("Event published — all users can now see it");
+      setTitle(""); setDescription(""); setPrizePool(""); setVenue(""); setDate(""); setEntryFee(""); setRules(""); setBannerUrl("");
     } catch (err: any) {
       toast.error(err.message ?? "Failed to publish");
     } finally {
