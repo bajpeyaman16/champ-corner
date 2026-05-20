@@ -172,8 +172,22 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       void refresh();
     });
     void refresh();
-    return () => sub.subscription.unsubscribe();
-  }, [refresh]);
+    void refreshAllEvents();
+    const channel = supabase
+      .channel("public:events")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        () => {
+          void refreshAllEvents();
+        }
+      )
+      .subscribe();
+    return () => {
+      sub.subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [refresh, refreshAllEvents]);
 
   return (
     <AppCtx.Provider
@@ -185,7 +199,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         savedIds,
         registrations,
         organized,
+        allEvents,
         refresh,
+        refreshAllEvents,
       }}
     >
       {children}
