@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { TOURNAMENTS, CATEGORIES, type Category } from "@/lib/mock-data";
+import { CATEGORIES, type Category } from "@/lib/mock-data";
+import { useAllEvents } from "@/lib/app-store";
 import { useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
  
