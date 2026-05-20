@@ -1,7 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { TOURNAMENTS, SPORT_ICONS, OUTDOOR_SPORTS, INDOOR_SPORTS } from "@/lib/mock-data";
+import { SPORT_ICONS, OUTDOOR_SPORTS, INDOOR_SPORTS } from "@/lib/mock-data";
+import { useAllEvents } from "@/lib/app-store";
  
 export const Route = createFileRoute("/sports/$sport")({
   component: SportPage,
