@@ -29,12 +29,13 @@ function Explore() {
   const { q, category, city } = Route.useSearch();
   const navigate = useNavigate({ from: "/explore" });
   const [showFilter, setShowFilter] = useState(false);
- 
-  const cities = useMemo(() => Array.from(new Set(TOURNAMENTS.map((t) => t.city))).sort(), []);
- 
+  const { list: allEvents } = useAllEvents();
+
+  const cities = useMemo(() => Array.from(new Set(allEvents.map((t) => t.city).filter(Boolean))).sort(), [allEvents]);
+
   const results = useMemo(() => {
     const term = q?.toLowerCase().trim();
-    return TOURNAMENTS.filter((t) => {
+    return allEvents.filter((t) => {
       if (category && t.category !== category) return false;
       if (city && t.city !== city) return false;
       if (term) {
@@ -43,7 +44,7 @@ function Explore() {
       }
       return true;
     });
-  }, [q, category, city]);
+  }, [q, category, city, allEvents]);
  
   const updateSearch = (patch: Partial<Search>) =>
     navigate({ search: (prev: Search) => ({ ...prev, ...patch }) });
