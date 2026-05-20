@@ -163,6 +163,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         rules: Array.isArray(e.rules) ? e.rules.join("\n") : "",
         status: (e.status as "draft" | "published") ?? "published",
         createdAt: e.created_at,
+        banner: e.banner ?? undefined,
       }))
     );
     setLoading(false);
