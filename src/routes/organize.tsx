@@ -91,6 +91,44 @@ function Organize() {
       <form onSubmit={submit} className="glass-strong rounded-3xl p-4 sm:p-6 grid gap-3 max-w-2xl mx-auto">
         <input className={ic} placeholder="Event title" value={title} onChange={(e) => setTitle(e.target.value)} />
         <textarea className={ic + " h-24 py-2"} placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+
+        {/* Banner image upload */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-2">Event banner image</p>
+          {bannerUrl ? (
+            <div className="relative rounded-2xl overflow-hidden h-40">
+              <img src={bannerUrl} alt="Banner preview" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setBannerUrl("")}
+                className="absolute top-2 right-2 size-8 rounded-full bg-background/80 grid place-items-center"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="w-full h-32 rounded-2xl glass border border-dashed border-border grid place-items-center text-sm text-muted-foreground gap-2 disabled:opacity-60"
+            >
+              <ImagePlus className="size-6" />
+              {uploading ? "Uploading…" : "Click to upload event image"}
+            </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void uploadBanner(f);
+              e.target.value = "";
+            }}
+          />
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <select className={ic} value={category} onChange={(e) => setCategory(e.target.value)}>
             {["Cricket","Football","Hockey","Athletics","Badminton","Chess","Snooker","Table Tennis","Kabaddi","Boxing"].map(c => <option key={c}>{c}</option>)}
