@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { OUTDOOR_SPORTS, TOURNAMENTS } from "@/lib/mock-data";
+import { OUTDOOR_SPORTS } from "@/lib/mock-data";
+import { useAllEvents } from "@/lib/app-store";
 import { Search, X } from "lucide-react";
 import { useState } from "react";
  
@@ -13,10 +14,11 @@ export const Route = createFileRoute("/sports/outdoor")({
 function Outdoor() {
   const [query, setQuery] = useState("");
   const [sport, setSport] = useState<string>("all");
+  const { list: allEvents } = useAllEvents();
   const outdoorNames = OUTDOOR_SPORTS.map((s) => s.name);
   const term = query.trim().toLowerCase();
-  const events = TOURNAMENTS.filter((event) => {
-    const isOutdoor = outdoorNames.includes(event.sport);
+  const events = allEvents.filter((event) => {
+    const isOutdoor = event.type === "Outdoor" || outdoorNames.includes(event.sport);
     const matchesSport = sport === "all" || event.sport === sport;
     const hay = `${event.name} ${event.sport} ${event.city} ${event.venue} ${event.organizer}`.toLowerCase();
     return isOutdoor && matchesSport && (!term || hay.includes(term));
