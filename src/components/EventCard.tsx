@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Star, MapPin, Calendar, Trophy, Bookmark } from "lucide-react";
-import type { Tournament } from "@/lib/mock-data";
+import type { DbEvent } from "@/lib/app-store";
 import { useSavedEvents } from "@/lib/app-store";
 
 export function EventCard({ e, compact = false }: { e: Tournament; compact?: boolean }) {
