@@ -20,6 +20,7 @@ export const Route = createFileRoute("/")({
  
 function Home() {
   const { user, isAuthenticated, loading } = useAuth();
+  const { list: allEvents } = useAllEvents();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +28,7 @@ function Home() {
   }, [loading, isAuthenticated, navigate]);
 
   const greeting = (user?.name ?? "Player").split(" ")[0];
+  const featured = allEvents.slice(0, 4);
  
   return (
     <PageShell greeting={greeting}>
