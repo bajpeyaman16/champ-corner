@@ -37,7 +37,8 @@ function cap(s: string) {
 function SportPage() {
   const { sport } = Route.useLoaderData();
   const display = cap(sport);
-  const list = TOURNAMENTS.filter((t) => t.sport.toLowerCase() === sport);
+  const { list: allEvents } = useAllEvents();
+  const list = allEvents.filter((t) => t.sport.toLowerCase() === sport);
   const icon = SPORT_ICONS[display] ?? "🏆";
  
   return (
