@@ -1,8 +1,7 @@
 // my-events.tsx — RESPONSIVE
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
-import { useRegistrations } from "@/lib/app-store";
-import { TOURNAMENTS } from "@/lib/mock-data";
+import { useRegistrations, useAllEvents } from "@/lib/app-store";
 import { Calendar, MapPin, Download } from "lucide-react";
 import { useState } from "react";
  
@@ -15,10 +14,11 @@ const TABS = ["Upcoming", "Ongoing", "Completed", "Registered"] as const;
  
 function MyEvents() {
   const { list } = useRegistrations();
+  const { list: allEvents } = useAllEvents();
   const [tab, setTab] = useState<(typeof TABS)[number]>("Registered");
  
   const events = list
-    .map((r) => ({ reg: r, event: TOURNAMENTS.find((t) => t.id === r.eventId)! }))
+    .map((r) => ({ reg: r, event: allEvents.find((t) => t.id === r.eventId)! }))
     .filter((x) => x.event);
  
   return (
