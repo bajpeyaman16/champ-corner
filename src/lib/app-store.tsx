@@ -309,9 +309,11 @@ export function useOrganized() {
         slots: `${e.teamLimit} teams`,
         rules: e.rules.split("\n").map((s) => s.trim()).filter(Boolean),
         status: e.status,
+        banner: e.banner ?? null,
         created_by: c.authUser.id,
       });
       await c.refresh();
+      await c.refreshAllEvents();
     },
     update: async (id: string, patch: Partial<OrganizedEvent>) => {
       await supabase
@@ -324,13 +326,25 @@ export function useOrganized() {
           date: patch.date,
           entry_fee: patch.entryFee,
           prize_pool: patch.prizePool,
+          banner: patch.banner,
         })
         .eq("id", id);
       await c.refresh();
+      await c.refreshAllEvents();
     },
     remove: async (id: string) => {
       await supabase.from("events").delete().eq("id", id);
       await c.refresh();
+      await c.refreshAllEvents();
     },
+  };
+}
+
+export function useAllEvents() {
+  const c = useCtx();
+  return {
+    list: c.allEvents,
+    byId: (id: string) => c.allEvents.find((e) => e.id === id),
+    refresh: c.refreshAllEvents,
   };
 }
