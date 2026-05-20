@@ -1,20 +1,14 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { TOURNAMENTS } from "@/lib/mock-data";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useRegistrations } from "@/lib/app-store";
+import { useRegistrations, useAllEvents } from "@/lib/app-store";
 import { ArrowLeft, CheckCircle2, CreditCard, Download } from "lucide-react";
  
 export const Route = createFileRoute("/events/$eventId/register")({
   component: Register,
-  loader: ({ params }) => {
-    const e = TOURNAMENTS.find((t) => t.id === params.eventId);
-    if (!e) throw notFound();
-    return { event: e };
-  },
   head: ({ params }) => ({ meta: [{ title: `Register — ${params.eventId}` }] }),
 });
  
@@ -33,7 +27,9 @@ type FormData = z.infer<typeof schema>;
 type Step = "form" | "pay" | "done";
  
 function Register() {
-  const { event: e } = Route.useLoaderData();
+  const { eventId } = Route.useParams();
+  const { list: allEvents } = useAllEvents();
+  const e = allEvents.find((t) => t.id === eventId);
   const [step, setStep] = useState<Step>("form");
   const [data, setData] = useState<FormData | null>(null);
   const [txn, setTxn] = useState<string>("");
@@ -43,8 +39,12 @@ function Register() {
  
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { city: e.city, state: "MP", members: 6 },
+    defaultValues: { city: e?.city ?? "", state: "MP", members: 6 },
   });
+
+  if (!e) {
+    return <div className="p-6 text-sm text-muted-foreground">Loading event…</div>;
+  }
  
   const onSubmit = (values: FormData) => {
     setData(values);

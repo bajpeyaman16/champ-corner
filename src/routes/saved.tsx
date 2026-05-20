@@ -1,17 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
-import { useSavedEvents } from "@/lib/app-store";
-import { TOURNAMENTS } from "@/lib/mock-data";
+import { useSavedEvents, useAllEvents } from "@/lib/app-store";
 import { EventCard } from "@/components/EventCard";
- 
+
 export const Route = createFileRoute("/saved")({
   component: Saved,
   head: () => ({ meta: [{ title: "Saved Events — Eventra" }] }),
 });
- 
+
 function Saved() {
   const { ids } = useSavedEvents();
-  const events = TOURNAMENTS.filter((t) => ids.includes(t.id));
+  const { list: allEvents } = useAllEvents();
+  const events = allEvents.filter((t) => ids.includes(t.id));
  
   return (
     <PageShell title="Saved Events">

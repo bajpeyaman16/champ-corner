@@ -27,6 +27,28 @@ export type OrganizedEvent = {
   rules: string;
   status: "draft" | "published";
   createdAt: string;
+  banner?: string;
+};
+
+export type DbEvent = {
+  id: string;
+  name: string;
+  sport: string;
+  category: string;
+  organizer: string;
+  venue: string;
+  city: string;
+  date: string;
+  prizePool: string;
+  entryFee: string;
+  slots: string;
+  format: string;
+  teamSize: string;
+  rating: number;
+  banner: string;
+  rules: string[];
+  type: "Indoor" | "Outdoor";
+  isLive?: boolean;
 };
 
 type Ctx = {
@@ -37,8 +59,35 @@ type Ctx = {
   savedIds: string[];
   registrations: Registration[];
   organized: OrganizedEvent[];
+  allEvents: DbEvent[];
   refresh: () => Promise<void>;
+  refreshAllEvents: () => Promise<void>;
 };
+
+const FALLBACK_BANNER =
+  "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80";
+
+function mapDbEvent(e: any): DbEvent {
+  return {
+    id: e.id,
+    name: e.name,
+    sport: e.sport ?? e.category ?? "Sports",
+    category: e.category ?? "sports",
+    organizer: e.organizer ?? "Organizer",
+    venue: e.venue ?? "",
+    city: e.city ?? e.venue ?? "",
+    date: e.date ?? "",
+    prizePool: e.prize_pool ?? "",
+    entryFee: e.entry_fee ?? "Free",
+    slots: e.slots ?? "",
+    format: e.format ?? "—",
+    teamSize: e.team_size ?? "—",
+    rating: Number(e.rating ?? 4.0),
+    banner: e.banner || FALLBACK_BANNER,
+    rules: Array.isArray(e.rules) ? e.rules : [],
+    type: (e.type as "Indoor" | "Outdoor") ?? "Outdoor",
+  };
+}
 
 const AppCtx = createContext<Ctx | null>(null);
 
@@ -48,7 +97,17 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [savedIds, setSavedIds] = useState<string[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [organized, setOrganized] = useState<OrganizedEvent[]>([]);
+  const [allEvents, setAllEvents] = useState<DbEvent[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const refreshAllEvents = useCallback(async () => {
+    const { data } = await supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .order("created_at", { ascending: false });
+    setAllEvents((data ?? []).map(mapDbEvent));
+  }, []);
 
   const refresh = useCallback(async () => {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -104,6 +163,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         rules: Array.isArray(e.rules) ? e.rules.join("\n") : "",
         status: (e.status as "draft" | "published") ?? "published",
         createdAt: e.created_at,
+        banner: e.banner ?? undefined,
       }))
     );
     setLoading(false);
@@ -114,8 +174,22 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       void refresh();
     });
     void refresh();
-    return () => sub.subscription.unsubscribe();
-  }, [refresh]);
+    void refreshAllEvents();
+    const channel = supabase
+      .channel("public:events")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        () => {
+          void refreshAllEvents();
+        }
+      )
+      .subscribe();
+    return () => {
+      sub.subscription.unsubscribe();
+      supabase.removeChannel(channel);
+    };
+  }, [refresh, refreshAllEvents]);
 
   return (
     <AppCtx.Provider
@@ -127,7 +201,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
         savedIds,
         registrations,
         organized,
+        allEvents,
         refresh,
+        refreshAllEvents,
       }}
     >
       {children}
@@ -234,9 +310,11 @@ export function useOrganized() {
         slots: `${e.teamLimit} teams`,
         rules: e.rules.split("\n").map((s) => s.trim()).filter(Boolean),
         status: e.status,
+        banner: e.banner ?? null,
         created_by: c.authUser.id,
       });
       await c.refresh();
+      await c.refreshAllEvents();
     },
     update: async (id: string, patch: Partial<OrganizedEvent>) => {
       await supabase
@@ -249,13 +327,25 @@ export function useOrganized() {
           date: patch.date,
           entry_fee: patch.entryFee,
           prize_pool: patch.prizePool,
+          banner: patch.banner,
         })
         .eq("id", id);
       await c.refresh();
+      await c.refreshAllEvents();
     },
     remove: async (id: string) => {
       await supabase.from("events").delete().eq("id", id);
       await c.refresh();
+      await c.refreshAllEvents();
     },
+  };
+}
+
+export function useAllEvents() {
+  const c = useCtx();
+  return {
+    list: c.allEvents,
+    byId: (id: string) => c.allEvents.find((e) => e.id === id),
+    refresh: c.refreshAllEvents,
   };
 }

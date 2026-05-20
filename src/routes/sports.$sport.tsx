@@ -1,7 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { TOURNAMENTS, SPORT_ICONS, OUTDOOR_SPORTS, INDOOR_SPORTS } from "@/lib/mock-data";
+import { SPORT_ICONS, OUTDOOR_SPORTS, INDOOR_SPORTS } from "@/lib/mock-data";
+import { useAllEvents } from "@/lib/app-store";
  
 export const Route = createFileRoute("/sports/$sport")({
   component: SportPage,
@@ -36,7 +37,8 @@ function cap(s: string) {
 function SportPage() {
   const { sport } = Route.useLoaderData();
   const display = cap(sport);
-  const list = TOURNAMENTS.filter((t) => t.sport.toLowerCase() === sport);
+  const { list: allEvents } = useAllEvents();
+  const list = allEvents.filter((t) => t.sport.toLowerCase() === sport);
   const icon = SPORT_ICONS[display] ?? "🏆";
  
   return (

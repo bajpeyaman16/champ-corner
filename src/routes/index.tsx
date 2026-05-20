@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell } from "@/components/AppShell";
 import { EventCard } from "@/components/EventCard";
-import { CATEGORIES, FEATURED } from "@/lib/mock-data";
-import { useAuth } from "@/lib/app-store";
+import { CATEGORIES } from "@/lib/mock-data";
+import { useAuth, useAllEvents } from "@/lib/app-store";
 import { useEffect } from "react";
 import { ChevronRight, MapPin, TrendingUp, Trophy, Users, Zap } from "lucide-react";
  
@@ -20,6 +20,7 @@ export const Route = createFileRoute("/")({
  
 function Home() {
   const { user, isAuthenticated, loading } = useAuth();
+  const { list: allEvents } = useAllEvents();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,6 +28,7 @@ function Home() {
   }, [loading, isAuthenticated, navigate]);
 
   const greeting = (user?.name ?? "Player").split(" ")[0];
+  const featured = allEvents.slice(0, 4);
  
   return (
     <PageShell greeting={greeting}>
@@ -113,7 +115,11 @@ function Home() {
       <section>
         <SectionHeader title="Featured Events" actionTo="/explore" />
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {FEATURED.map((e) => <EventCard key={e.id} e={e} />)}
+          {featured.length === 0 ? (
+            <p className="text-sm text-zinc-500 col-span-full">No events yet — be the first to organize one!</p>
+          ) : (
+            featured.map((e) => <EventCard key={e.id} e={e} />)
+          )}
         </div>
       </section>
  
