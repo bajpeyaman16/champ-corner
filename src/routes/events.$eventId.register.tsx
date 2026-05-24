@@ -2,16 +2,19 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { toPng } from "html-to-image";
 import { useRegistrations, useAllEvents } from "@/lib/app-store";
+import { createOrder, verifyPayment, getRazorpayKey } from "@/lib/payment.functions";
 import { ArrowLeft, CheckCircle2, CreditCard, Download } from "lucide-react";
- 
+
 export const Route = createFileRoute("/events/$eventId/register")({
   component: Register,
   head: ({ params }) => ({ meta: [{ title: `Register — ${params.eventId}` }] }),
 });
- 
+
 const schema = z.object({
   teamName: z.string().trim().min(2, "Team name required").max(60),
   captain: z.string().trim().min(2, "Captain name required").max(60),
@@ -23,9 +26,34 @@ const schema = z.object({
   members: z.number({ error: "Required" }).min(1).max(20),
 });
 type FormData = z.infer<typeof schema>;
- 
 type Step = "form" | "pay" | "done";
- 
+
+// "₹500" / "Rs 1,200" / "Free" / "₹0" → rupees number
+function parseFeeRupees(fee: string | undefined | null): number {
+  if (!fee) return 0;
+  if (/free/i.test(fee)) return 0;
+  const n = Number(String(fee).replace(/[^\d.]/g, ""));
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
+
+declare global {
+  interface Window {
+    Razorpay?: new (opts: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+function loadRazorpayScript(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve(false);
+    if (window.Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
+
 function Register() {
   const { eventId } = Route.useParams();
   const { list: allEvents } = useAllEvents();
@@ -33,48 +61,131 @@ function Register() {
   const [step, setStep] = useState<Step>("form");
   const [data, setData] = useState<FormData | null>(null);
   const [txn, setTxn] = useState<string>("");
+  const [paidAmount, setPaidAmount] = useState<number>(0);
   const [paying, setPaying] = useState(false);
   const reg = useRegistrations();
   const navigate = useNavigate();
- 
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  const createOrderFn = useServerFn(createOrder);
+  const verifyPaymentFn = useServerFn(verifyPayment);
+  const getKeyFn = useServerFn(getRazorpayKey);
+
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { city: e?.city ?? "", state: "MP", members: 6 },
   });
 
-  if (!e) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading event…</div>;
-  }
- 
+  if (!e) return <div className="p-6 text-sm text-muted-foreground">Loading event…</div>;
+
+  const feeRupees = parseFeeRupees(e.entryFee);
+  const isFree = feeRupees === 0;
+
   const onSubmit = (values: FormData) => {
     setData(values);
     setStep("pay");
   };
- 
-  const pay = () => {
-    setPaying(true);
-    setTimeout(() => {
-      const id = "TXN" + Math.random().toString(36).slice(2, 10).toUpperCase();
-      setTxn(id);
-      reg.add({
-        eventId: e.id,
-        teamName: data!.teamName,
-        captain: data!.captain,
-        paidAt: new Date().toISOString(),
-        txnId: id,
-      });
-      setStep("done");
-      setPaying(false);
-      toast.success("Payment successful");
-    }, 1400);
+
+  const completeRegistration = async (txnId: string, amountRupees: number) => {
+    setTxn(txnId);
+    setPaidAmount(amountRupees);
+    await reg.add({
+      eventId: e.id,
+      teamName: data!.teamName,
+      captain: data!.captain,
+      paidAt: new Date().toISOString(),
+      txnId,
+    });
+    setStep("done");
   };
- 
+
+  const pay = async () => {
+    if (!data) return;
+    setPaying(true);
+    try {
+      if (isFree) {
+        await completeRegistration("FREE-" + Date.now().toString(36).toUpperCase(), 0);
+        toast.success("Registration confirmed (free event)");
+        return;
+      }
+
+      const ok = await loadRazorpayScript();
+      if (!ok || !window.Razorpay) throw new Error("Razorpay SDK failed to load");
+
+      const { keyId } = await getKeyFn();
+      const { orderId, amount } = await createOrderFn({
+        data: { amount: feeRupees * 100, eventId: e.id },
+      });
+
+      const rzp = new window.Razorpay({
+        key: keyId,
+        amount,
+        currency: "INR",
+        order_id: orderId,
+        name: "Eventra",
+        description: e.name,
+        prefill: { name: data.captain, email: data.email, contact: data.mobile },
+        theme: { color: "#6366f1" },
+        handler: async (resp: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            await verifyPaymentFn({
+              data: {
+                orderId: resp.razorpay_order_id,
+                paymentId: resp.razorpay_payment_id,
+                signature: resp.razorpay_signature,
+              },
+            });
+            await completeRegistration(resp.razorpay_payment_id, feeRupees);
+            toast.success("Payment successful");
+          } catch (err) {
+            console.error(err);
+            toast.error("Payment verification failed");
+          } finally {
+            setPaying(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setPaying(false);
+            toast.info("Payment cancelled");
+          },
+        },
+      });
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Payment failed");
+      setPaying(false);
+    }
+  };
+
+  const downloadReceipt = async () => {
+    if (!receiptRef.current) return;
+    try {
+      const dataUrl = await toPng(receiptRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#0b0b14",
+      });
+      const link = document.createElement("a");
+      link.download = `eventra-receipt-${txn}.png`;
+      link.href = dataUrl;
+      link.click();
+      toast.success("Receipt downloaded");
+    } catch {
+      toast.error("Could not generate receipt");
+    }
+  };
+
   const stepLabel = step === "done" ? "All set" : step === "pay" ? "Step 2 of 2" : "Step 1 of 2";
   const stepTitle = step === "done" ? "Registration Complete" : step === "pay" ? "Payment" : "Team Registration";
- 
+
   return (
     <div className="min-h-screen pb-12">
-      {/* Sticky header */}
       <header className="sticky top-0 z-20 px-4 pt-4 pb-3 bg-background/70 backdrop-blur-xl border-b border-border">
         <div className="mx-auto max-w-2xl flex items-center gap-3">
           <Link
@@ -90,21 +201,17 @@ function Register() {
           </div>
         </div>
       </header>
- 
+
       <main className="mx-auto max-w-2xl px-4 py-4 sm:py-6">
- 
-        {/* ── STEP 1: FORM ── */}
         {step === "form" && (
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Event summary */}
             <div className="glass-strong rounded-3xl p-4 sm:p-5">
               <h2 className="font-display font-bold text-sm sm:text-base">{e.name}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 {e.venue}, {e.city} · {e.date}
               </p>
             </div>
- 
-            {/* Form fields */}
+
             <div className="glass-strong rounded-3xl p-4 sm:p-5 grid gap-4">
               <Field label="Team Name" error={form.formState.errors.teamName?.message}>
                 <input {...form.register("teamName")} className={inputCls} placeholder="The Strikers" />
@@ -112,8 +219,7 @@ function Register() {
               <Field label="Captain Name" error={form.formState.errors.captain?.message}>
                 <input {...form.register("captain")} className={inputCls} placeholder="Full name" />
               </Field>
- 
-              {/* Mobile / Email — stacked on mobile, side-by-side on sm+ */}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Mobile" error={form.formState.errors.mobile?.message}>
                   <input {...form.register("mobile")} className={inputCls} placeholder="+91 ..." />
@@ -122,12 +228,11 @@ function Register() {
                   <input {...form.register("email")} className={inputCls} placeholder="you@team.in" />
                 </Field>
               </div>
- 
+
               <Field label="Address" error={form.formState.errors.address?.message}>
                 <input {...form.register("address")} className={inputCls} placeholder="Street, area" />
               </Field>
- 
-              {/* City / State — side-by-side always (short fields) */}
+
               <div className="grid grid-cols-2 gap-3">
                 <Field label="City" error={form.formState.errors.city?.message}>
                   <input {...form.register("city")} className={inputCls} />
@@ -136,7 +241,7 @@ function Register() {
                   <input {...form.register("state")} className={inputCls} />
                 </Field>
               </div>
- 
+
               <Field label="Team Members" error={form.formState.errors.members?.message}>
                 <input
                   type="number"
@@ -147,20 +252,18 @@ function Register() {
                 />
               </Field>
             </div>
- 
+
             <button
               type="submit"
               className="w-full py-4 rounded-3xl bg-gradient-primary text-primary-foreground font-bold shadow-glow text-sm sm:text-base"
             >
-              Continue to Payment · {e.entryFee}
+              {isFree ? "Continue · Free" : `Continue to Payment · ₹${feeRupees}`}
             </button>
           </form>
         )}
- 
-        {/* ── STEP 2: PAYMENT ── */}
+
         {step === "pay" && (
           <div className="space-y-4">
-            {/* Order summary */}
             <div className="glass-strong rounded-3xl p-4 sm:p-5">
               <h2 className="font-display font-bold">Order Summary</h2>
               <div className="mt-3 text-sm grid gap-2">
@@ -178,71 +281,64 @@ function Register() {
                 </div>
                 <div className="flex justify-between border-t border-border pt-2 mt-2">
                   <span className="font-semibold">Total</span>
-                  <span className="font-bold text-gradient-gold">{e.entryFee}</span>
+                  <span className="font-bold text-gradient-gold">{isFree ? "Free" : `₹${feeRupees}`}</span>
                 </div>
               </div>
             </div>
- 
-            {/* Payment methods */}
-            <div className="glass-strong rounded-3xl p-4 sm:p-5">
-              <h2 className="font-display font-bold">Pay with</h2>
-              {/* 1-col on mobile, 2-col on sm+ */}
-              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {["UPI", "Card", "Net Banking", "Wallet"].map((m, i) => (
-                  <label key={m} className="flex items-center gap-3 p-3 rounded-2xl glass cursor-pointer">
-                    <input type="radio" name="method" defaultChecked={i === 0} className="accent-[var(--primary)]" />
-                    <CreditCard className="size-4 text-primary shrink-0" />
-                    <span className="text-sm font-medium">{m}</span>
-                  </label>
-                ))}
+
+            {!isFree && (
+              <div className="glass-strong rounded-3xl p-4 sm:p-5">
+                <h2 className="font-display font-bold">Pay with Razorpay</h2>
+                <div className="mt-3 flex items-center gap-3 p-3 rounded-2xl glass">
+                  <CreditCard className="size-4 text-primary shrink-0" />
+                  <span className="text-sm font-medium">UPI · Cards · NetBanking · Wallets</span>
+                </div>
+                <p className="mt-3 text-[11px] text-muted-foreground">
+                  Secure checkout. Test card: 4111 1111 1111 1111, any future date, any CVV.
+                </p>
               </div>
-              <p className="mt-3 text-[11px] text-muted-foreground">Demo flow — no real money is charged.</p>
-            </div>
- 
+            )}
+
             <button
               onClick={pay}
               disabled={paying}
               className="w-full py-4 rounded-3xl bg-gradient-primary text-primary-foreground font-bold shadow-glow disabled:opacity-60 text-sm sm:text-base"
             >
-              {paying ? "Processing..." : `Pay ${e.entryFee}`}
+              {paying ? "Processing..." : isFree ? "Confirm Registration" : `Pay ₹${feeRupees}`}
             </button>
           </div>
         )}
- 
-        {/* ── STEP 3: SUCCESS ── */}
+
         {step === "done" && (
-          <div className="space-y-4 text-center">
-            <div className="glass-strong rounded-3xl p-6 sm:p-8">
+          <div className="space-y-4">
+            <div ref={receiptRef} className="glass-strong rounded-3xl p-6 sm:p-8 text-center">
               <div className="size-16 rounded-full bg-gradient-primary mx-auto grid place-items-center shadow-glow">
                 <CheckCircle2 className="size-8 text-primary-foreground" />
               </div>
               <h2 className="font-display text-xl sm:text-2xl font-bold mt-4">Registration Successful</h2>
               <p className="text-xs sm:text-sm text-muted-foreground mt-2">
-                A confirmation has been sent to {data?.email}.
+                Confirmation sent to {data?.email}
               </p>
               <div className="mt-5 grid gap-2 text-left">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Event</span>
-                  <span className="font-semibold text-right ml-4 max-w-[60%] truncate">{e.name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Team</span>
-                  <span className="font-semibold">{data?.teamName}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Transaction ID</span>
-                  <span className="font-mono text-xs">{txn}</span>
-                </div>
+                <Row label="Event" value={e.name} />
+                <Row label="Team" value={data?.teamName ?? "—"} />
+                <Row label="Captain" value={data?.captain ?? "—"} />
+                <Row label="Members" value={String(data?.members ?? "—")} />
+                <Row label="Venue" value={`${e.venue}, ${e.city}`} />
+                <Row label="Date" value={e.date} />
+                <Row label="Amount Paid" value={paidAmount > 0 ? `₹${paidAmount}` : "Free"} />
+                <Row label="Transaction ID" value={txn} mono />
+                <Row label="Issued" value={new Date().toLocaleString()} />
               </div>
-              <button
-                onClick={() => toast.success("Receipt downloaded")}
-                className="mt-5 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm font-semibold"
-              >
-                <Download className="size-4" /> Download Receipt
-              </button>
             </div>
- 
-            {/* Action buttons — 2-col on sm+, stacked on mobile */}
+
+            <button
+              onClick={downloadReceipt}
+              className="w-full inline-flex justify-center items-center gap-2 py-3 rounded-2xl glass text-sm font-semibold"
+            >
+              <Download className="size-4" /> Download Receipt (PNG)
+            </button>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 onClick={() => navigate({ to: "/" })}
@@ -263,24 +359,25 @@ function Register() {
     </div>
   );
 }
- 
+
 const inputCls =
   "w-full h-11 px-3 rounded-xl glass text-sm outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground";
- 
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
+
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className="text-xs text-muted-foreground">{label}</span>
       <div className="mt-1">{children}</div>
       {error && <span className="text-xs text-destructive mt-1 block">{error}</span>}
     </label>
+  );
+}
+
+function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex justify-between text-sm gap-3">
+      <span className="text-muted-foreground shrink-0">{label}</span>
+      <span className={`font-semibold text-right ${mono ? "font-mono text-xs" : ""}`}>{value}</span>
+    </div>
   );
 }
